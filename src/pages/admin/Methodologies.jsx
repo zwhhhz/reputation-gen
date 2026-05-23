@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
+import { getMockMethodologies } from '../../api/mock';
 import FileUpload from '../../components/FileUpload';
 
 function Methodologies() {
@@ -9,13 +10,17 @@ function Methodologies() {
   const [form, setForm] = useState({ title: '', content: '' });
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
 
   const loadMethodologies = async () => {
     try {
       const res = await api.get('/methodologies');
       setMethodologies(res.data || []);
+      setIsDemo(false);
     } catch {
-      setError('加载方法论失败');
+      const mock = getMockMethodologies();
+      setMethodologies(mock.data || []);
+      setIsDemo(true);
     }
   };
 
@@ -24,6 +29,10 @@ function Methodologies() {
   }, []);
 
   const openCreate = () => {
+    if (isDemo) {
+      alert('演示模式下不支持此操作，请启动后端服务');
+      return;
+    }
     setEditingId(null);
     setForm({ title: '', content: '' });
     setShowModal(true);
@@ -31,6 +40,7 @@ function Methodologies() {
   };
 
   const openEdit = (meth) => {
+    if (isDemo) return;
     setEditingId(meth.id);
     setForm({ title: meth.title, content: meth.content || '' });
     setShowModal(true);
@@ -92,6 +102,12 @@ function Methodologies() {
         </button>
       </div>
 
+      {isDemo && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 text-sm">
+          💡 演示模式 — 数据为模拟数据，启动后端后可进行真实操作
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
           {error}
@@ -99,9 +115,11 @@ function Methodologies() {
       )}
 
       {/* 上传区域 */}
-      <div className="mb-6">
-        <FileUpload onUpload={handleUpload} loading={uploading} />
-      </div>
+      {!isDemo && (
+        <div className="mb-6">
+          <FileUpload onUpload={handleUpload} loading={uploading} />
+        </div>
+      )}
 
       {/* 方法论列表 */}
       <div className="space-y-4">
@@ -132,7 +150,7 @@ function Methodologies() {
                   </button>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 line-clamp-3">{meth.content || '暂无内容'}</p>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">{meth.content || '暂无内容'}</p>
             </div>
           ))
         )}

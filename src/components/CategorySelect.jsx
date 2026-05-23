@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import api from '../api/client';
+import { getMockCategories } from '../api/mock';
 
 /**
  * 品类选择器组件
- * @param {{ value: number|null, onChange: (id: number|null) => void }} props
  */
 function CategorySelect({ value, onChange }) {
   const [categories, setCategories] = useState([]);
@@ -12,7 +12,9 @@ function CategorySelect({ value, onChange }) {
     api.get('/categories').then((res) => {
       setCategories(res.data || []);
     }).catch(() => {
-      setCategories([]);
+      // 后端不可用时降级到模拟数据
+      const mock = getMockCategories();
+      setCategories(mock.data || []);
     });
   }, []);
 

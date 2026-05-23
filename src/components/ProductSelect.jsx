@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import api from '../api/client';
+import { getMockProducts } from '../api/mock';
 
 /**
  * 产品选择器组件，根据品类联动
- * @param {{ categoryId: number|null, value: number|null, onChange: (id: number|null) => void }} props
  */
 function ProductSelect({ categoryId, value, onChange }) {
   const [products, setProducts] = useState([]);
@@ -18,7 +18,9 @@ function ProductSelect({ categoryId, value, onChange }) {
       setProducts(res.data || []);
       onChange(null);
     }).catch(() => {
-      setProducts([]);
+      // 后端不可用时降级到模拟数据
+      const mock = getMockProducts(categoryId);
+      setProducts(mock.data || []);
       onChange(null);
     });
   }, [categoryId]);

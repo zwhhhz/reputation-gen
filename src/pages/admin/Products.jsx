@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
+import { getMockCategories, getMockProducts } from '../../api/mock';
 import FileUpload from '../../components/FileUpload';
 
 function Products() {
@@ -9,8 +10,9 @@ function Products() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ category_id: '', name: '', description: '' });
   const [error, setError] = useState('');
-  const [filesModal, setFilesModal] = useState(null); // product_id
+  const [filesModal, setFilesModal] = useState(null);
   const [productFiles, setProductFiles] = useState([]);
+  const [isDemo, setIsDemo] = useState(false);
 
   const loadData = async () => {
     try {
@@ -20,8 +22,14 @@ function Products() {
       ]);
       setProducts(prodRes.data || []);
       setCategories(catRes.data || []);
+      setIsDemo(false);
     } catch {
-      setError('加载数据失败');
+      // 降级到模拟数据
+      const mockProd = getMockProducts();
+      const mockCat = getMockCategories();
+      setProducts(mockProd.data || []);
+      setCategories(mockCat.data || []);
+      setIsDemo(true);
     }
   };
 
@@ -30,6 +38,10 @@ function Products() {
   }, []);
 
   const openCreate = () => {
+    if (isDemo) {
+      alert('演示模式下不支持此操作，请启动后端服务');
+      return;
+    }
     setEditingId(null);
     setForm({ category_id: categories[0]?.id || '', name: '', description: '' });
     setShowModal(true);
@@ -37,6 +49,7 @@ function Products() {
   };
 
   const openEdit = (prod) => {
+    if (isDemo) return;
     setEditingId(prod.id);
     setForm({ category_id: prod.category_id, name: prod.name, description: prod.description || '' });
     setShowModal(true);
@@ -70,6 +83,10 @@ function Products() {
   };
 
   const openFiles = async (productId) => {
+    if (isDemo) {
+      alert('演示模式下不支持此操作');
+      return;
+    }
     setFilesModal(productId);
     try {
       const res = await api.get(`/products/${productId}/files`);
@@ -119,6 +136,12 @@ function Products() {
           + 新建产品
         </button>
       </div>
+
+      {isDemo && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 text-sm">
+          💡 演示模式 — 数据为模拟数据，启动后端后可进行真实操作
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">

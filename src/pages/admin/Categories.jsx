@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
+import { getMockCategories } from '../../api/mock';
 
 function Categories() {
   const [categories, setCategories] = useState([]);
@@ -7,13 +8,18 @@ function Categories() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ name: '', description: '' });
   const [error, setError] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
 
   const loadCategories = async () => {
     try {
       const res = await api.get('/categories');
       setCategories(res.data || []);
+      setIsDemo(false);
     } catch {
-      setError('加载品类失败');
+      // 降级到模拟数据
+      const mock = getMockCategories();
+      setCategories(mock.data || []);
+      setIsDemo(true);
     }
   };
 
@@ -22,6 +28,10 @@ function Categories() {
   }, []);
 
   const openCreate = () => {
+    if (isDemo) {
+      alert('演示模式下不支持此操作，请启动后端服务');
+      return;
+    }
     setEditingId(null);
     setForm({ name: '', description: '' });
     setShowModal(true);
@@ -29,6 +39,7 @@ function Categories() {
   };
 
   const openEdit = (cat) => {
+    if (isDemo) return;
     setEditingId(cat.id);
     setForm({ name: cat.name, description: cat.description || '' });
     setShowModal(true);
@@ -72,6 +83,12 @@ function Categories() {
           + 新建品类
         </button>
       </div>
+
+      {isDemo && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 text-sm">
+          💡 演示模式 — 数据为模拟数据，启动后端后可进行真实操作
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">

@@ -5,6 +5,7 @@ import PlatformSelect from '../components/PlatformSelect';
 import CopyCard from '../components/CopyCard';
 import LinkInput from '../components/LinkInput';
 import api from '../api/client';
+import { getMockCopies } from '../api/mock';
 
 function Home() {
   const [categoryId, setCategoryId] = useState(null);
@@ -14,6 +15,7 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [linkLoading, setLinkLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
 
   /** 自动生成文案 */
   const handleGenerate = async () => {
@@ -24,11 +26,19 @@ function Home() {
     setError('');
     setLoading(true);
     setCopies([]);
+    setIsDemo(false);
     try {
       const res = await api.post('/generate', { product_id: productId, platform });
       setCopies(res.data || []);
     } catch (err) {
-      setError(err.message || '生成失败');
+      // 后端不可用时降级到模拟数据
+      if (err.message === 'NETWORK_ERROR' || err.message.includes('Network Error') || err.message.includes('Failed to fetch')) {
+        const mock = getMockCopies(platform);
+        setCopies(mock.data || []);
+        setIsDemo(true);
+      } else {
+        setError(err.message || '生成失败');
+      }
     } finally {
       setLoading(false);
     }
@@ -39,6 +49,7 @@ function Home() {
     setError('');
     setLinkLoading(true);
     setCopies([]);
+    setIsDemo(false);
     try {
       const res = await api.post('/generate/by-link', { link, platform: linkPlatform });
       if (res.code === 20002) {
@@ -47,7 +58,14 @@ function Home() {
       }
       setCopies(res.data?.copies || []);
     } catch (err) {
-      setError(err.message || '链接解析失败');
+      // 后端不可用时降级到模拟数据
+      if (err.message === 'NETWORK_ERROR' || err.message.includes('Network Error') || err.message.includes('Failed to fetch')) {
+        const mock = getMockCopies(linkPlatform);
+        setCopies(mock.data || []);
+        setIsDemo(true);
+      } else {
+        setError(err.message || '链接解析失败');
+      }
     } finally {
       setLinkLoading(false);
     }
@@ -60,6 +78,13 @@ function Home() {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">口碑评论自动生成</h1>
         <p className="text-gray-500">选择产品与平台，一键生成 5 条真实自然的口碑文案</p>
       </div>
+
+      {/* 演示模式提示 */}
+      {isDemo && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6 text-sm">
+          💡 当前为演示模式（后端未连接），展示的是模拟文案。启动后端后可生成真实 AI 文案。
+        </div>
+      )}
 
       {/* 选择区域 */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">

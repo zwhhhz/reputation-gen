@@ -1,36 +1,30 @@
 import { useEffect, useState } from 'react';
-import api from '../../api/client';
+import { getMockCategories, getMockProducts, getMockMethodologies, getMockFeedbacks } from '../../api/mock';
 
 function Dashboard() {
   const [stats, setStats] = useState({
     categories: 0,
     products: 0,
     methodologies: 0,
-    copies: 0,
     feedbacks: 0,
   });
 
   useEffect(() => {
-    async function loadStats() {
-      try {
-        const [catRes, prodRes, methRes, fbRes] = await Promise.all([
-          api.get('/categories'),
-          api.get('/products'),
-          api.get('/methodologies'),
-          api.get('/feedbacks'),
-        ]);
-        setStats({
-          categories: (catRes.data || []).length,
-          products: (prodRes.data || []).length,
-          methodologies: (methRes.data || []).length,
-          copies: (fbRes.data || []).reduce((acc, fb) => acc + 1, 0),
-          feedbacks: (fbRes.data || []).length,
-        });
-      } catch {
-        // 静默处理
-      }
+    // Dashboard 直接用模拟数据（GitHub Pages 无后端）
+    try {
+      const catData = getMockCategories().data || [];
+      const prodData = getMockProducts().data || [];
+      const methData = getMockMethodologies().data || [];
+      const fbData = getMockFeedbacks().data || [];
+      setStats({
+        categories: catData.length,
+        products: prodData.length,
+        methodologies: methData.length,
+        feedbacks: fbData.length,
+      });
+    } catch {
+      // 静默处理
     }
-    loadStats();
   }, []);
 
   const cards = [
@@ -43,6 +37,11 @@ function Dashboard() {
   return (
     <div>
       <h2 className="text-xl font-bold text-gray-800 mb-6">仪表盘</h2>
+
+      <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6 text-sm">
+        💡 当前为演示模式（GitHub Pages 静态部署），展示模拟数据。启动后端后可进行真实操作。
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => (
           <div key={card.label} className="bg-white rounded-xl border border-gray-200 p-5 card-hover">
@@ -65,6 +64,17 @@ function Dashboard() {
           <p>2. 在「产品管理」中添加产品并上传 PDF 资料</p>
           <p>3. 在「方法论管理」中配置口碑方法论</p>
           <p>4. 回到前台选择产品和平台，一键生成文案</p>
+        </div>
+      </div>
+
+      <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">如何在本地运行完整版？</h3>
+        <div className="text-gray-600 text-sm space-y-2 font-mono">
+          <p>git clone https://github.com/zwhhhz/reputation-gen.git</p>
+          <p>cd reputation-gen</p>
+          <p>npm install</p>
+          <p>cp .env.example .env  # 填入 OPENAI_API_KEY</p>
+          <p>npm run dev  # 启动前后端开发服务器</p>
         </div>
       </div>
     </div>

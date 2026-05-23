@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
+import { getMockFeedbacks, getMockCategories } from '../../api/mock';
 import { PLATFORM_LABELS, formatDate } from '../../lib/utils';
 
 function Feedback() {
@@ -8,13 +9,17 @@ function Feedback() {
   const [feedbackText, setFeedbackText] = useState('');
   const [selectedCopyId, setSelectedCopyId] = useState(null);
   const [applyingId, setApplyingId] = useState(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   const loadFeedbacks = async () => {
     try {
       const res = await api.get('/feedbacks');
       setFeedbacks(res.data || []);
+      setIsDemo(false);
     } catch {
-      setError('加载反馈失败');
+      const mock = getMockFeedbacks();
+      setFeedbacks(mock.data || []);
+      setIsDemo(true);
     }
   };
 
@@ -51,6 +56,12 @@ function Feedback() {
     <div>
       <h2 className="text-xl font-bold text-gray-800 mb-6">文案反馈</h2>
 
+      {isDemo && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 text-sm">
+          💡 演示模式 — 数据为模拟数据，启动后端后可进行真实操作
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
           {error}
@@ -86,7 +97,7 @@ function Feedback() {
                 <span className={`text-xs px-2 py-0.5 rounded ${fb.applied ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                   {fb.applied ? '已应用' : '待应用'}
                 </span>
-                {!fb.applied && (
+                {!fb.applied && !isDemo && (
                   <button
                     onClick={() => handleApplyFeedback(fb.id)}
                     disabled={applyingId === fb.id}
