@@ -2,12 +2,18 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { mkdirSync } from 'fs';
 import { initDatabase, default as db } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3001;
 
 async function startServer() {
+  // 确保运行时目录存在
+  mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
+  mkdirSync(path.join(process.cwd(), 'uploads', 'products'), { recursive: true });
+  mkdirSync(path.join(process.cwd(), 'uploads', 'methodologies'), { recursive: true });
+
   // 初始化数据库
   await initDatabase();
 
@@ -47,8 +53,8 @@ async function startServer() {
   });
 
   /** 启动服务 */
-  app.listen(PORT, () => {
-    console.log(`[ReputationGen] Server running at http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[ReputationGen] Server running at http://0.0.0.0:${PORT}`);
   });
 
   /** 优雅关闭：保存数据库 */

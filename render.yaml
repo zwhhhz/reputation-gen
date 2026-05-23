@@ -3,6 +3,7 @@ services:
     name: reputation-gen
     runtime: node
     plan: free
+    region: oregon
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
